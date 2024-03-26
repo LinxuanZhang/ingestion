@@ -12,7 +12,6 @@ from function import get_secret, check_file_exists
 import shutil
 
 def get_ukb_concat_df(cur_id, file_name):
-    cwd = os.getcwd()
     temp_dir = f'/home/ubuntu/ingestion/{tempfile.mkdtemp()}'
     os.makedirs(temp_dir, exist_ok=True)
     if True: 

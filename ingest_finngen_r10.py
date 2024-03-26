@@ -45,7 +45,7 @@ if __name__ == "__main__":
     base_s3_key = 'TER/FinnGen_r10'
 
     # Load Manifest and Process Files
-    manifest = pl.read_csv("summary_stats_R10_manifest.tsv", separator='\t')
+    manifest = pl.read_csv("manifest/summary_stats_R10_manifest.tsv", separator='\t')
     url_list = manifest['path_https'].to_list()
     url_list = url_list[:2]
 
