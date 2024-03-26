@@ -9,10 +9,13 @@ import boto3
 import gzip
 import concurrent.futures
 from function import get_secret, check_file_exists
+import shutil
 
 def get_ukb_concat_df(cur_id, file_name):
     cwd = os.getcwd()
-    with tempfile.TemporaryDirectory(dir=cwd) as temp_dir:
+    temp_dir = f'/home/ubuntu/ingestion/{tempfile.mkdtemp()}'
+    os.makedirs(temp_dir, exist_ok=True)
+    if True: 
         # print(f"Temporary directory created at: {temp_dir}")
         files = synapseutils.syncFromSynapse(syn, cur_id, path=temp_dir)
         concatenated_df = None
@@ -38,6 +41,7 @@ def get_ukb_concat_df(cur_id, file_name):
                             else:
                                 concatenated_df = pl.concat([concatenated_df, df], how='vertical')
     concatenated_df = concatenated_df.with_columns(pl.lit(file_name).alias('file_name'))
+    shutil.rmtree(temp_dir)
     return concatenated_df
 
 def clean_df(df, mapping_df):
@@ -58,7 +62,7 @@ def clean_df(df, mapping_df):
 
 def process_and_upload_file(mapping_df, cur_id, file_name, bucket_name, base_s3_key):
     # check if the file as already been ingested
-    s3_key = f'{base_s3_key}/{file_name.replace(".tar", ".parquet")}'
+    s3_key = f'{base_s3_key}/{file_name.replace(".tar", ".parquet").lower()}'
     if check_file_exists(bucket_name, s3_key):
         print(f'{file_name} already exists, skipping')
         return
@@ -75,7 +79,7 @@ def process_and_upload_file(mapping_df, cur_id, file_name, bucket_name, base_s3_
     # upload to s3
     s3_client = boto3.client('s3', aws_access_key_id=secret['s3_access_key_secret_name'], aws_secret_access_key=secret['s3_secret_key_secret_name'])
     s3_client.upload_fileobj(buffer, bucket_name, s3_key)
-
+    print(f'{file_name} ingestion finished')
 
 if __name__ == "__main__":
     print('loading mapping files')
@@ -90,10 +94,11 @@ if __name__ == "__main__":
     # get manifest
     query = syn.tableQuery("SELECT * FROM syn53038826 WHERE ( ( \"parentId\" = 'syn51365308' ) )")
     ids = list(query.asDataFrame().id)
-    file_names = list(query.asDataFrame().name.str.lower())
+    file_names = list(query.asDataFrame().name)
     # base key
     base_s3_key = 'TER/UKB_Olink'
-
+    #for cur_id, file_name in zip(ids, file_names):
+     #   process_and_upload_file(mapping_df, cur_id, file_name, bucket_name, base_s3_key)
     # submitting jobs
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         futures = [executor.submit(process_and_upload_file, mapping_df, cur_id, file_name, bucket_name, base_s3_key) for cur_id, file_name in zip(ids, file_names)]
