@@ -75,7 +75,7 @@ if __name__ == "__main__":
     file_names = manifest['filename'].to_list()
 
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(process_and_upload_file, url, file_name, annotation_df, secret, bucket_name, base_s3_key) for url, file_name in zip(urls, file_names)]
 
     # Handle Failed Uploads
