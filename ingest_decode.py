@@ -32,14 +32,21 @@ def clean_soma_df(df, annotation_df):
 
 
 def process_and_upload_file(url, file_name, annotation_df, secret, bucket_name, base_s3_key):
-    print(f'Ingesting {file_name}')
+    
     if file_name is None:
         return
 
     s3_key = f'{base_s3_key}/{file_name}.parquet'
     if check_file_exists(bucket_name, s3_key):
+        print(f'{file_name} completed, skipping')
         return
 
+    in_chr = [check_file_exists(bucket_name, f"TER/deCODE_SomaScan/chr{chrom}/{file_name}.parquet") for chrom in range(1, 24)]
+    if all(in_chr):
+        print(f'{file_name} completed, skipping')
+        return
+
+    print(f'Ingesting {file_name}')
     # processing
     df = get_df_from_url(url)
     df = df.with_columns(pl.lit(file_name).alias('file_name'))

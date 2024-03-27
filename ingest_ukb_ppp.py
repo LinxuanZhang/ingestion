@@ -60,11 +60,18 @@ def clean_df(df, mapping_df):
     return df
 
 def process_and_upload_file(mapping_df, cur_id, file_name, bucket_name, base_s3_key):
+    file_name =file_name.replace(".tar", ".parquet").lower()
     # check if the file as already been ingested
-    s3_key = f'{base_s3_key}/{file_name.replace(".tar", ".parquet").lower()}'
+    s3_key = f'{base_s3_key}/{file_name}'
     if check_file_exists(bucket_name, s3_key):
         print(f'{file_name} already exists, skipping')
         return
+    
+    in_chr = [check_file_exists(bucket_name, f"TER/UKB_Olink/chr{chrom}/{file_name}") for chrom in range(1, 24)]
+    if all(in_chr):
+        print(f'{file_name} completed, skipping')
+        return
+    
     # start ingestion
     print(f'Ingesting {file_name}')
     # download and merge form synapseclient
@@ -72,7 +79,7 @@ def process_and_upload_file(mapping_df, cur_id, file_name, bucket_name, base_s3_
     # clean and merge to get rsid
     df = clean_df(df, mapping_df) 
     for chrom in df['chr'].unique().to_list():
-        partition_key = f"TER/UKB_Olink/chr{chrom}/{file_name.replace(".tar", ".parquet").lower()}.parquet"
+        partition_key = f"TER/UKB_Olink/chr{chrom}/{file_name}"
         if check_file_exists(bucket_name, partition_key):
             continue
         
