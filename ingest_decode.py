@@ -44,13 +44,20 @@ def process_and_upload_file(url, file_name, annotation_df, secret, bucket_name, 
     df = get_df_from_url(url)
     df = df.with_columns(pl.lit(file_name).alias('file_name'))
     df = clean_soma_df(df, annotation_df)
+    for chrom in df['chr'].unique().to_list():
+        partition_df = df.filter(pl.col('chr') == chrom)
+        partition_key = f"TER/deCODE_SomaScan/chr{chrom}/{s3_key}"
+        buffer = BytesIO()
+        partition_df.write_parquet(buffer)
+        buffer.seek(0)
+        s3_client.put_object(Bucket=bucket_name, Key=partition_key, Body=buffer)
 
-    buffer = BytesIO()
-    df.write_parquet(buffer)
-    buffer.seek(0)
+    # buffer = BytesIO()
+    # df.write_parquet(buffer)
+    # buffer.seek(0)
 
-    s3_client = boto3.client('s3', aws_access_key_id=secret['s3_access_key_secret_name'], aws_secret_access_key=secret['s3_secret_key_secret_name'])
-    s3_client.upload_fileobj(buffer, bucket_name, s3_key)
+    
+    # s3_client.upload_fileobj(buffer, bucket_name, s3_key)
 
 
 if __name__ == "__main__":
@@ -73,7 +80,7 @@ if __name__ == "__main__":
     manifest = pl.read_csv('manifest/decode_protein_manifest.csv')
     urls = manifest['urls'].to_list()
     file_names = manifest['filename'].to_list()
-
+    s3_client = boto3.client('s3', aws_access_key_id=secret['s3_access_key_secret_name'], aws_secret_access_key=secret['s3_secret_key_secret_name'])
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(process_and_upload_file, url, file_name, annotation_df, secret, bucket_name, base_s3_key) for url, file_name in zip(urls, file_names)]
