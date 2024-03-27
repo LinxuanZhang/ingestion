@@ -24,7 +24,7 @@ def partition_and_transfer_file(file_key):
         # Download the file to process
         response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
         df = pl.read_parquet(BytesIO(response['Body'].read()))
-        pattern = r'deCODE_SomaScan/(.*?)\.parquet'
+        pattern = r'UKB_Olink/(.*?)\.parquet'
         file_name = re.search(pattern, file_key).group(1)
         
         # Assuming a 'date' column for partitioning - adjust as needed
