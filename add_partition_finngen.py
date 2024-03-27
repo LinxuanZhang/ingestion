@@ -31,14 +31,6 @@ def partition_and_transfer_file(file_key):
         for chrom in df['chr'].unique().to_list():
             partition_df = df.filter(pl.col('chr') == chrom)
             partition_key = f"{source_prefix}{destination_prefix}{chrom}/{file_key.split('/')[-1]}"
-            
-            # Convert Polars DataFrame to bytes and upload
-            buffer = BytesIO()
-            partition_df.write_parquet(buffer)
-            buffer.seek(0)
-
-            s3_client = boto3.client('s3', aws_access_key_id=secret['s3_access_key_secret_name'], aws_secret_access_key=secret['s3_secret_key_secret_name'])
-            s3_client.upload_fileobj(buffer, bucket_name, s3_key)
 
             buffer = BytesIO()
             partition_df.write_parquet(buffer)
