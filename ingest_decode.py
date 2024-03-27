@@ -46,7 +46,7 @@ def process_and_upload_file(url, file_name, annotation_df, secret, bucket_name, 
     df = clean_soma_df(df, annotation_df)
     for chrom in df['chr'].unique().to_list():
         partition_df = df.filter(pl.col('chr') == chrom)
-        partition_key = f"TER/deCODE_SomaScan/chr{chrom}/{s3_key}"
+        partition_key = f"TER/deCODE_SomaScan/chr{chrom}/{file_name}.parquet"
         buffer = BytesIO()
         partition_df.write_parquet(buffer)
         buffer.seek(0)

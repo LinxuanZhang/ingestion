@@ -72,8 +72,12 @@ def process_and_upload_file(mapping_df, cur_id, file_name, bucket_name, base_s3_
     # clean and merge to get rsid
     df = clean_df(df, mapping_df) 
     for chrom in df['chr'].unique().to_list():
+        partition_key = f"TER/UKB_Olink/chr{chrom}/{file_name.replace(".tar", ".parquet").lower()}.parquet"
+        if check_file_exists(bucket_name, partition_key):
+            continue
+        
         partition_df = df.filter(pl.col('chr') == chrom)
-        partition_key = f"TER/UKB_Olink/chr{chrom}/{s3_key}"
+        
         buffer = BytesIO()
         partition_df.write_parquet(buffer)
         buffer.seek(0)
