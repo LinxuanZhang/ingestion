@@ -17,7 +17,14 @@ def list_s3_objects(bucket, prefix):
     """List objects in an S3 bucket with pagination."""
     paginator = s3_client.get_paginator('list_objects_v2')
     page_iterator = paginator.paginate(Bucket=bucket, Prefix=prefix)
-    return [content['Key'] for page in page_iterator for content in page.get('Contents', []) if 'chr' not in content['Key'] and 'parquet' in content['Key']]
+    pattern = re.compile(r'chr[0-9]')
+    filtered_keys = [
+        content['Key']
+        for page in page_iterator
+        for content in page.get('Contents', [])
+        if not pattern.search(content['Key']) and 'parquet' in content['Key']
+    ]
+    return filtered_keys
 
 def partition_and_transfer_file(file_key):
     try:
