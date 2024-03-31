@@ -66,7 +66,7 @@ def process_and_upload_file(mapping_df, cur_id, file_name, bucket_name, base_s3_
         print(f'{file_name.replace(".tar", ".parquet").lower()} already exists, skipping')
         return
     
-    in_chr = [check_file_exists(bucket_name, f"TER/UKB_Olink/chr{chrom}/{file_name.replace(".tar", ".parquet").lower()}") for chrom in range(1, 24)]
+    in_chr = [check_file_exists(bucket_name, f'TER/UKB_Olink/chr{chrom}/{file_name.replace(".tar", ".parquet").lower()}') for chrom in range(1, 24)]
     if all(in_chr):
         print(f'{file_name.replace(".tar", ".parquet").lower()} completed, skipping')
         return
