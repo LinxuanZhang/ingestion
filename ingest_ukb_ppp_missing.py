@@ -60,7 +60,6 @@ def clean_df(df, mapping_df):
     return df
 
 def process_and_upload_file(mapping_df, cur_id, file_name, bucket_name, base_s3_key):
-    file_name =file_name.replace(".tar", ".parquet").lower()
     # check if the file as already been ingested
     s3_key = f'{base_s3_key}/{file_name.replace(".tar", ".parquet").lower()}'
     if check_file_exists(bucket_name, s3_key):
@@ -89,13 +88,7 @@ def process_and_upload_file(mapping_df, cur_id, file_name, bucket_name, base_s3_
         partition_df.write_parquet(buffer)
         buffer.seek(0)
         s3_client.put_object(Bucket=bucket_name, Key=partition_key, Body=buffer)
-    # write df to buffer
-    # buffer = BytesIO()
-    # df.write_parquet(buffer)
-    # buffer.seek(0)
-    # # upload to s3
-    # s3_client = boto3.client('s3', aws_access_key_id=secret['s3_access_key_secret_name'], aws_secret_access_key=secret['s3_secret_key_secret_name'])
-    # s3_client.upload_fileobj(buffer, bucket_name, s3_key)
+
     print(f'{file_name} ingestion finished')
 
 if __name__ == "__main__":
