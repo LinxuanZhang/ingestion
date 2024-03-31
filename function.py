@@ -50,10 +50,8 @@ def get_parquet_from_s3(object_key):
     bucket_name = secret['s3_bucket_name_secret_name']
     obj = s3_client.get_object(Bucket=bucket_name, Key=object_key)
     # Read data into a pandas DataFrame
-    print('loading mapping...')
+    print('loading parquet...')
     df = pl.read_parquet(BytesIO(obj['Body'].read()))
-    print('saving mapping...')
-    df.write_parquet('build_mapping.parquet')
     return df
 
 

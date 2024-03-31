@@ -8,7 +8,7 @@ from io import BytesIO
 import boto3
 import gzip
 import concurrent.futures
-from function import get_secret, check_file_exists
+from function import get_secret, check_file_exists, get_parquet_from_s3
 import shutil
 
 def get_ukb_concat_df(cur_id, file_name):
@@ -100,7 +100,9 @@ def process_and_upload_file(mapping_df, cur_id, file_name, bucket_name, base_s3_
 
 if __name__ == "__main__":
     print('loading mapping files')
-    mapping_df = pl.read_parquet('build_mapping.parquet', columns=['ID', 'rsid', 'POS38'])
+    mapping_df = get_parquet_from_s3('Resource/build_mapping.parquet')
+    mapping_df = mapping_df.select(['ID', 'rsid', 'POS38'])
+    print(mapping_df.head())
     print('loading configs')
     # Load Configuration
     secret = get_secret()
